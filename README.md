@@ -1,4 +1,4 @@
-# Wafer Composite Defect Identifier Model + UI
+# Wafer Composite Defect Identifier Model (CNN) + UI
 ### Developed by Sofia Anchia
 
 A Streamlit app for exploring, visualizing, and classifying wafer defect maps from the [WM-811K](https://www.kaggle.com/datasets/qingyi/wm811k-wafer-map) dataset; included with a human-in-the-loop labeling workflow that retrains and improves the underlying CNN as you verify predictions.
