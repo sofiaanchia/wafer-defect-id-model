@@ -4,8 +4,8 @@ Load and normalize the WM-811K wafer map dataset (LSWMD.pkl).
 The published pickle is a pandas DataFrame where several columns are stored
 as nested numpy object arrays instead of plain scalars (a known quirk of the
 original dataset release), e.g. failureType == array([['Center']], dtype=object)
-instead of "Center". This module unwraps those and derives a few convenience
-columns used throughout the app.
+instead of "Center". This file fixes this bug, normalizes and preprocesses the data, and derives some per-model
+label id and data derivation functions used throughout the app.
 """
 
 import pickle

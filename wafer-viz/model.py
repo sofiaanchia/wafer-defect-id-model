@@ -1,11 +1,14 @@
 """
 CNN classifier for wafer defect maps, adapted from the architecture in
 MathWorks' "Classify Anomalies on Wafer Defect Maps Using Deep Learning"
-example: 4 conv blocks (8/16/32/64 filters) with batchnorm + ReLU + max
-pooling, dropout, then a linear classification head over umbrella defect
-classes. In-house subtypes are not modeled as separate output classes
-(too few verified examples per subtype to be reliable) — they're found via
-nearest-neighbor search over this network's penultimate-layer embeddings.
+
+example: 
+- 4 conv blocks (8/16/32/64 filters) with batchnorm + ReLU + max
+    pooling, dropout, then a linear classification head over umbrella defect
+    classes. 
+- In-house subtypes are not modeled as separate output classes
+    (too few verified examples per subtype to be reliable) --> they're found via
+    nearest-neighbor search over this network's 2nd-to-last-layer embeddings.
 """
 
 from __future__ import annotations

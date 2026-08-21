@@ -1,16 +1,16 @@
 """
-SQLite-backed store for the in-house defect taxonomy and per-wafer labels.
+SQLite-backed store for the (optional) in-house defect classification hierachy/taxonomy and per-wafer labels.
 
 Two label fields are kept structurally separate on every wafer row:
 
-- predicted_* : written only by the model (initial inference, retrain's
-  batch pass). Every write to these columns is guarded by
-  `WHERE verified = 0`, so an automated process can never move or
-  overwrite a label a human has confirmed.
-- verified_*  : written only by `verify_label`, which is called from a
-  human action in the UI (the "Verify" button in Classify, or "Confirm"
-  in Defect Reevaluation). This is the only path that can set `verified=1`.
+- predicted_*: Filled only by the AI/CNN model. The system locks these columns once a human confirms a label, 
+                so automation can never overwrite human work.
+- verified_*: Filled only when a human clicks "Verify" or "Confirm" in the UI. 
+                This is the only way to mark a label as human-verified.
+
 """
+
+
 
 from __future__ import annotations
 
@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS defect_types (
 -- distinct from every other NULL, so it silently allows unlimited duplicate
 -- top-level types (parent_id IS NULL). Partial indexes split top-level and
 -- child uniqueness so NULL is never part of an indexed equality check.
+
 CREATE UNIQUE INDEX IF NOT EXISTS idx_defect_types_top_level
     ON defect_types(name) WHERE parent_id IS NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_defect_types_child

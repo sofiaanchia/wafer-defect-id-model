@@ -20,7 +20,7 @@ from matplotlib.colors import ListedColormap
 
 import label_store as ls
 import model as M
-from data_loader import failure_class_order, load_dataset
+from data_loader import failure_class_order, load_dataset, wafer_stats
 
 WAFER_CMAP = ListedColormap(["white", "#b0bec5", "#e53935"])  # bg, good die, defect
 
@@ -64,7 +64,7 @@ def load_production_info() -> dict | None:
 
 def maybe_trigger_retrain(conn) -> bool:
     """Called right after a human verifies a label (Classify's Verify button,
-    Reevaluation's Confirm button) -- retraining happens automatically as a
+    Reevaluation's Confirm button) --> retraining happens automatically as a
     natural consequence of new verified ground truth existing, no manual
     "Retrain" button. Still produces only a *candidate*; promoting it to
     production stays an explicit human action (see tab_model), so a model
@@ -376,9 +376,10 @@ def tab_classify(df: pd.DataFrame, filtered: pd.DataFrame, conn):
     st.divider()
     c1, c2 = st.columns([1, 1])
     with c1:
+        st.metric("Defect ratio", f"{wafer_stats(wafer_map)['defectRatio']:.1%}")
         fig, ax = plt.subplots(figsize=(3.5, 3.5))
         render_wafer(ax, wafer_map, title=f"wafer_id {wafer_id}")
-        st.pyplot(fig)
+        st.pyplot(fig, width="content")
         plt.close(fig)
 
     prod_info = load_production_info()
@@ -403,13 +404,13 @@ def tab_classify(df: pd.DataFrame, filtered: pd.DataFrame, conn):
             st.metric("Model prediction", predicted_name, f"{predicted_conf:.1%} confidence")
             cam = clf.grad_cam(wafer_map)
             resized = M.preprocess(wafer_map).squeeze(0).numpy()
-            fig2, ax2 = plt.subplots(figsize=(3, 3))
+            fig2, ax2 = plt.subplots(figsize=(3.5, 3.5))
             ax2.imshow(resized, cmap="gray")
             ax2.imshow(cam, cmap="jet", alpha=0.5)
             ax2.set_xticks([])
             ax2.set_yticks([])
-            ax2.set_title("Grad-CAM: what drove this prediction", fontsize=8)
-            st.pyplot(fig2)
+            ax2.set_title("Grad-CAM overlay", fontsize=8)
+            st.pyplot(fig2, width="content")
             plt.close(fig2)
 
     st.divider()
@@ -617,7 +618,7 @@ def tab_model(conn):
         )
 
     cm = pd.DataFrame(ev["confusion_matrix_normalized"], index=classes, columns=classes)
-    st.caption("Confusion matrix (row-normalized) — rows are true class, columns are predicted class")
+    st.caption("Confusion matrix (row-normalized); rows are true class, columns are predicted class")
     st.dataframe(cm.style.format("{:.2f}").background_gradient(cmap="Reds", axis=1), width="stretch")
 
     metrics_df = pd.DataFrame(
@@ -635,7 +636,7 @@ def tab_model(conn):
     st.dataframe(metrics_df.style.format("{:.2f}"), width="stretch")
 
     st.caption("Precision-recall curves for all classes")
-    fig, ax = plt.subplots(figsize=(5, 4))
+    fig, ax = plt.subplots(figsize=(3.2, 2.6))
     for cls, m in ev["per_class"].items():
         ax.plot(m["pr_curve"]["recall"], m["pr_curve"]["precision"], label=cls, linewidth=1.2)
     ax.set_xlabel("Recall")
@@ -644,7 +645,7 @@ def tab_model(conn):
     ax.set_ylim(0, 1.02)
     ax.grid(alpha=0.3)
     ax.legend(fontsize=7, loc="lower left")
-    st.pyplot(fig)
+    st.pyplot(fig, width="content")
     plt.close(fig)
 
     gradcam_dir = MODELS_DIR / f"candidate_{prod_info['version']}_gradcam"
@@ -658,7 +659,7 @@ def tab_model(conn):
 
 
 def main():
-    st.title("Wafer Map Explorer — WM-811K")
+    st.title("Wafer Composite Defect Map: Classifier + Neural Network")
     path = sidebar_data_source()
     df = cached_load(path)
     filtered = sidebar_filters(df)
